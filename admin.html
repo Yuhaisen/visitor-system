@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外来人员访问信息记录管理系统</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; 
+            background: #f5f7fa; 
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+        }
+        
+        /* 登录页面样式 */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .login-header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .login-header p {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .login-form .form-group {
+            margin-bottom: 20px;
+        }
+        .login-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .login-form input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .login-btn:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        .login-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* 管理页面样式 */
+        .admin-content {
+            display: none;
+        }
+        .header { 
+            background: white; 
+            padding: 25px 30px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        .logo {
+            height: 60px;
+            max-width: 200px;
+            object-fit: contain;
+        }
+        .header-text {
+            flex: 1;
+        }
+        .header-text h1 { 
+            color: #2c3e50; 
+            margin-bottom: 5px;
+            font-size: 24px;
+        }
+        .header-text p { 
+            color: #7f8c8d; 
+            font-size: 14px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-name {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .logout-btn {
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+        .stats { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 25px; 
+        }
+        .stat-card { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            text-align: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .stat-number { 
+            font-size: 32px; 
+            font-weight: 700; 
+            color: #3498db; 
+            margin-bottom: 8px;
+        }
+        .stat-card:nth-child(2) .stat-number { color: #2ecc71; }
+        .stat-card:nth-child(3) .stat-number { color: #e74c3c; }
+        .stat-label { 
+            color: #7f8c8d; 
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .filters { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin-bottom: 25px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: end;
+        }
+        .form-group { 
+            margin-bottom: 0;
+        }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        input, select { 
+            padding: 10px 12px; 
+            border: 2px solid #e1e5e9; 
+            border-radius: 8px; 
+            font-size: 14px;
+            min-width: 150px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus { 
+            border-color: #3498db; 
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .btn { 
+            padding: 10px 20px; 
+            background: #3498db; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn:hover { 
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        .btn-secondary { 
+            background: #95a5a6; 
+        }
+        .btn-secondary:hover { 
+            background: #7f8c8d; 
+        }
+        .btn-success { 
+            background: #2ecc71; 
+        }
+        .btn-success:hover { 
+            background: #27ae60; 
+        }
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            overflow-x: auto;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse;
+            min-width: 1000px;
+        }
+        th, td { 
+            padding: 14px 16px; 
+            text-align: left; 
+            border-bottom: 1px solid #ecf0f1; 
+            font-size: 14px;
+        }
+        th { 
+            background: #f8f9fa; 
+            color: #2c3e50; 
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        tr:hover { 
+            background: #f8f9fa; 
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+        .last-update {
+            text-align: center;
+            color: #95a5a6;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+        .refresh-btn {
+            background: transparent;
+            border: none;
+            color: #3498db;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+        /* 添加可点击的统计卡片样式 */
+        .stat-card.clickable {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .stat-card.clickable:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
+        .stat-card.clickable:active {
+            transform: translateY(-1px);
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-left {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .filter-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            input, select {
+                min-width: 100%;
+            }
+            .logo {
+                height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-header">
+            <h1>管理系统登录</h1>
+            <p>外来人员访问信息记录管理系统</p>
+        </div>
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required placeholder="请输入密码">
+            </div>
+            <button type="submit" class="login-btn">登录</button>
+        </form>
+        <div class="login-message" id="loginMessage"></div>
+    </div>
+    
+    <!-- 管理页面 -->
+    <div class="container" id="adminContainer">
+        <div class="admin-content" id="adminContent">
+            <div class="header">
+                <div class="header-left">
+                    <div class="logo-container">
+                        <img src="Logo.png" alt="贵州磷化集团" class="logo">
+                    </div>
+                    <div class="header-text">
+                        <h1>外来人员访问信息记录管理系统</h1>
+                        <p>实时监控和管理所有访客登记信息</p>
+                    </div>
+                </div>
+                <div class="user-info">
+                    <span class="user-name" id="currentUserName">管理员</span>
+                    <button class="logout-btn" onclick="logout()">退出登录</button>
+                    <button class="btn btn-success" onclick="exportData()">
+                        <span>📊</span> 导出Excel
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalRecords">0</div>
+                    <div class="stat-label">总记录数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todayRecords">0</div>
+                    <div class="stat-label">今日记录</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="locationCount">0</div>
+                    <div class="stat-label">登记地点</div>
+                </div>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label>地点筛选</label>
+                        <select id="locationFilter">
+                            <option value="all">全部地点</option>
+                            <option value="bangongloujifang">办公楼机房</option>
+                            <option value="linanyiban_dianchiyian">电池一铵</option>
+                            <option value="linanyiban_a">磷铵一班A系列</option>
+                            <option value="linanyiban_b">磷铵一班B系列</option>
+                            <option value="linanerban_1">磷铵二班一系列</option>
+                            <option value="linanerban_2">磷铵二班二系列</option>
+                            <option value="linansanban">30万吨</option>
+                            <option value="linanerban_guanqu">磷铵二班浓酸罐区</option>
+                            <option value="linansiban_1">磷铵四班一系列</option>
+                            <option value="linansiban_2">磷铵四班二系列</option>
+                            <option value="linansiban_guanqu">磷铵四班浓酸罐区</option>
+                            <option value="gonganban">供氨班氨站</option>
+                            <option value="liusuanyiban_yurefadian12">余热发电1#2#机组</option>
+                            <option value="liusuanyiban_yurefadian3">余热发电3#机组</option>
+                            <option value="liusuanyiban_ab">硫酸一班AB套</option>
+                            <option value="liusuanyiban_abfengji">硫酸一班AB套风机房</option>
+                            <option value="liusuanyiban_c">硫酸一班C套</option>
+                            <option value="laorongliu">老熔硫</option>
+                            <option value="zhiliuban">制硫班</option>
+                            <option value="liusuanyiban_jifang">硫酸一班机房</option>
+                            <option value="liusuanerban_yurefadian">硫酸二班余热发电</option>
+                            <option value="liusuanerban_yuyafadian">硫酸二班余压发电</option>
+                            <option value="liusuanerban_xunhuanshui">硫酸二班循环水</option>
+                            <option value="liusuanerban_ab">硫酸二班AB套</option>
+                            <option value="liusuanerban_abfengji">硫酸二班AB套风机房</option>
+                            <option value="liusuanerban_guanqu">硫酸二班稀酸罐区</option>
+                            <option value="linsuanyiban_nongsuo1">磷酸一班浓缩一</option>
+                            <option value="linsuanyiban_nongsuo2">磷酸一班浓缩二</option>
+                            <option value="fuyan">氟盐</option>
+                            <option value="linsuanyiban_jifang">磷酸一班机房</option>
+                            <option value="linsuanyiban_gh">磷酸一班浓缩GH套</option>
+                            <option value="linsuanyiban_guolv1">磷酸一班过滤一</option>
+                            <option value="linsuanyiban_guolv2">磷酸一班过滤二</option>
+                            <option value="linsuanyiban_dianhuishou">碘回收</option>
+                            <option value="linsuanerban_guolv12">磷酸二班过滤一二</option>
+                            <option value="linsuanerban_nongsuo1">磷酸二班浓缩一</option>
+                            <option value="linsuanerban_nongsuo2">磷酸二班浓缩二</option>
+                            <option value="yuanliao_1">原料一</option>
+                            <option value="fuxuan">浮选</option>
+                            <option value="yuanliao_2">原料二</option>
+                            <option value="taociguolv_3">三期陶瓷过滤</option>
+                            <option value="tuoyanshui">脱盐水</option>
+                            <option value="tuoyanshui_reshuifadian">脱盐水热水发电</option>
+                            <option value="dcp">DCP</option>
+                            <option value="xinwushuizhan">新污水站</option>
+                            <option value="shengchanshuichang">生产水厂</option>
+                            <option value="liulinjifang">硫磷综合楼机房</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>日期筛选</label>
+                        <input type="date" id="dateFilter">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>关键词搜索</label>
+                        <input type="text" id="searchFilter" placeholder="姓名、手机、单位等">
+                    </div>
+                    
+                    <div class="form-group">
+                        <button class="btn" onclick="loadData()">
+                            <span>🔍</span> 搜索
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetFilters()">
+                            <span>🔄</span> 重置
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>登记时间</th>
+                            <th>工作单位</th>
+                            <th>姓名</th>
+                            <th>身份证号</th>
+                            <th>到访人数</th>
+                            <th>来访时间</th>
+                            <th>来访目的</th>
+                            <th>联系方式</th>
+                            <th>对接人员</th>
+                            <th>登记地点</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsBody">
+                        <tr>
+                            <td colspan="10" class="loading">
+                                <div>加载中...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="last-update">
+                最后更新: <span id="lastUpdateText">--</span>
+                <button class="refresh-btn" onclick="loadData()" title="刷新数据">🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 LeanCloud SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.13.2/dist/av-min.js"></script>
+    <script src="locations.js"></script>
+    <script src="leancloud-config.js"></script>
+    
+    <script>
+        // 用户管理配置
+        const ADMIN_USERS = [
+            { username: 'admin', password: 'admin123', name: '系统管理员' },
+            { username: 'manager', password: 'manager123', name: '管理用户' }
+        ];
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查是否已登录
+            checkLoginStatus();
+            
+            // 绑定登录表单提交事件
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                login();
+            });
+        });
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            const currentUser = localStorage.getItem('adminUser');
+            if (currentUser) {
+                showAdminPage(JSON.parse(currentUser));
+            } else {
+                showLoginPage();
+            }
+        }
+        
+        // 显示登录页面
+        function showLoginPage() {
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('adminContainer').style.display = 'none';
+        }
+        
+        // 显示管理页面
+        function showAdminPage(user) {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('adminContainer').style.display = 'block';
+            document.getElementById('adminContent').style.display = 'block';
+            document.getElementById('currentUserName').textContent = user.name;
+            
+            // 初始化 LeanCloud
+            const initSuccess = initLeanCloud();
+            if (!initSuccess) {
+                showError('系统初始化失败，请刷新页面重试');
+                return;
+            }
+            
+            // 为今日记录卡片添加点击事件
+            document.getElementById('todayRecords').parentElement.classList.add('clickable');
+            document.getElementById('todayRecords').parentElement.addEventListener('click', function(){
+                filterTodayRecords();
+            });
+            
+            // 加载初始数据
+            loadData();
+            updateStats();
+            
+            // 设置自动刷新（每30秒）
+            setInterval(function() {
+                loadData();
+                updateStats();
+            }, 30000);
+            
+            // 绑定搜索框回车事件
+            document.getElementById('searchFilter').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loadData();
+                }
+            });
+        }
+        
+        // 登录功能
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('loginMessage');
+            
+            // 验证用户名和密码
+            const user = ADMIN_USERS.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                // 登录成功
+                localStorage.setItem('adminUser', JSON.stringify(user));
+                showAdminPage(user);
+            } else {
+                // 登录失败
+                messageDiv.textContent = '用户名或密码错误';
+                messageDiv.className = 'login-message error';
+                messageDiv.style.display = 'block';
+                
+                // 3秒后隐藏错误信息
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('adminUser');
+            showLoginPage();
+            // 清空表单
+            document.getElementById('loginForm').reset();
+        }
+        
+        // 筛选今日记录
+        function filterTodayRecords() {
+            // 设置今日日期
+            const today = new Date();
+            const todayString = today.toISOString().split('T')[0];
+            document.getElementById('dateFilter').value = todayString;
+            
+            // 重置其他筛选条件
+            document.getElementById('locationFilter').value = 'all';
+            document.getElementById('searchFilter').value = '';
+            
+            // 加载数据
+            loadData();
+            
+            // 给用户一个视觉反馈
+            const todayCard = document.getElementById('todayRecords').parentElement;
+            todayCard.style.background = '#f0f8ff';
+            setTimeout(() => {
+                todayCard.style.background = 'white';
+            }, 500);
+        }
+        
+        // 更新统计信息
+        async function updateStats() {
+            try {
+                const stats = await getStats();
+                
+                document.getElementById('totalRecords').textContent = stats.totalRecords;
+                document.getElementById('todayRecords').textContent = stats.todayRecords;
+                document.getElementById('locationCount').textContent = stats.locationCount;
+                
+                // 确保今日记录卡片可点击
+                const todayCard = document.getElementById('todayRecords').parentElement;
+                if (!todayCard.classList.contains('clickable')) {
+                    todayCard.classList.add('clickable');
+                    todayCard.addEventListener('click', filterTodayRecords);
+                }
+                
+            } catch (error) {
+                console.error('更新统计失败:', error);
+            }
+        }
+        
+        // 加载数据
+        async function loadData() {
+            try {
+                // 获取筛选条件
+                const location = document.getElementById('locationFilter').value;
+                const date = document.getElementById('dateFilter').value;
+                const search = document.getElementById('searchFilter').value;
+
+                console.log('筛选条件:', {location, date, search});
+                
+                // 显示加载状态
+                const tbody = document.getElementById('recordsBody');
+                tbody.innerHTML = '<tr><td colspan="10" class="loading"><div>加载中...</div></td></tr>';
+                
+                // 获取数据
+                const records = await getVisitorRecords({
+                    location: location,
+                    date: date,
+                    search: search
+                });
+
+                console.log('获取到的记录数量:', records.length);
+                console.log('记录样例:', records[0]);
+                
+                // 显示数据
+                displayRecords(records);
+                
+                // 更新最后更新时间
+                updateLastUpdateTime();
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showError('加载失败:', error.message);
+            }
+        }
+        
+        // 在 leancloud.js 中修复 getVisitorRecords 函数
+        async function getVisitorRecords(filters = {}) {
+            try {
+                const query = new AV.Query('VisitorRecord');
+        
+                console.log('开始查询，筛选条件:', filters);
+        
+            // 应用筛选条件 - 修复地点筛选
+            if (filters.location && filters.location !== 'all') {
+                console.log('应用地点筛选:', filters.location);
+            
+                // 尝试多种可能的字段名称
+                const locationQuery = new AV.Query('VisitorRecord');
+                locationQuery.equalTo('location', filters.location);
+            
+                const locationNameQuery = new AV.Query('VisitorRecord');
+                locationNameQuery.equalTo('locationName', filters.location);
+            
+                // 使用 OR 查询，匹配任意一个字段
+                query._orQuery([locationQuery, locationNameQuery]);
+            }
+        
+            // 日期筛选
+            if (filters.date) {
+                console.log('应用日期筛选:', filters.date);
+                const startDate = new Date(filters.date);
+                const endDate = new Date(startDate);
+                endDate.setDate(endDate.getDate() + 1);
+            
+                query.greaterThanOrEqualTo('createdAt', startDate);
+                query.lessThan('createdAt', endDate);
+            }
+        
+            // 关键词搜索
+            if (filters.search) {
+                console.log('应用关键词搜索:', filters.search);
+                const nameQuery = new AV.Query('VisitorRecord');
+                nameQuery.contains('name', filters.search);
+            
+                const phoneQuery = new AV.Query('VisitorRecord');
+                phoneQuery.contains('phone', filters.search);
+            
+                const companyQuery = new AV.Query('VisitorRecord');
+                companyQuery.contains('company', filters.search);
+
+                const visitPurposeQuery = new AV.Query('VisitorRecord');
+                visitPurposeQuery.contains('visitPurpose', filters.search);
+
+                const contactPersonQuery = new AV.Query('VisitorRecord');
+                contactPersonQuery.contains('contactPerson', filters.search);
+            
+                query._orQuery([nameQuery, phoneQuery, companyQuery, visitPurposeQuery, contactPersonQuery]);
+            }
+        
+            // 按创建时间倒序排列
+            query.descending('createdAt');
+        
+            // 分页
+            const page = filters.page || 1;
+            const limit = filters.limit || 50;
+            query.limit(limit);
+            query.skip((page - 1) * limit);
+        
+            const records = await query.find();
+            console.log('查询完成，找到记录:', records.length);
+        
+            return records.map(record => {
+                const data = {
+                    id: record.id,
+                    createdAt: record.get('createdAt'),
+                    submitTime: record.get('submitTime') || record.get('createdAt'),
+                    company: record.get('company') || '',
+                    name: record.get('name') || '',
+                    idCard: record.get('idCard') || record.get('id_card') || '',
+                    visitorCount: record.get('visitorCount') || record.get('visitor_count') || 1,
+                    visitTime: record.get('visitTime') || record.get('visit_time'),
+                    visitPurpose: record.get('visitPurpose') || record.get('visit_purpose') || '',
+                    phone: record.get('phone') || '',
+                    contactPerson: record.get('contactPerson') || record.get('contact_person') || '',
+                    location: record.get('location') || '',
+                    locationName: record.get('locationName') || record.get('location_name') || '',
+                    ipAddress: record.get('ipAddress') || record.get('ip_address') || ''
+                };
+            
+                console.log('处理后的记录数据:', data);
+                return data;
+            });
+        
+        } catch (error) {
+            console.error('获取记录失败:', error);
+            return [];
+        }
+    }
+
+        // 显示记录
+        function displayRecords(records) {
+            const tbody = document.getElementById('recordsBody');
+            
+            if (records.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="empty-state">
+                            <div>📭</div>
+                            <div>暂无记录</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = records.map(record => `
+                <tr>
+                    <td>${formatDateTime(record.submitTime)}</td>
+                    <td>${escapeHtml(record.company)}</td>
+                    <td>${escapeHtml(record.name)}</td>
+                    <td>${escapeHtml(record.idCard)}</td>
+                    <td>${record.visitorCount}</td>
+                    <td>${formatDateTime(record.visitTime)}</td>
+                    <td>${escapeHtml(record.visitPurpose)}</td>
+                    <td>${escapeHtml(record.phone)}</td>
+                    <td>${escapeHtml(record.contactPerson)}</td>
+                    <td>${escapeHtml(record.locationName)}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // 更新最后更新时间
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('lastUpdateText').textContent = now.toLocaleString('zh-CN');
+        }
+        
+        // 重置筛选条件
+        function resetFilters() {
+            document.getElementById('locationFilter').value = 'all';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            loadData();
+        }
+        
+        // 导出数据
+        function exportData() {
+            // 简单的CSV导出实现
+            const table = document.querySelector('table');
+            let csv = [];
+            
+            // 表头
+            const headers = [];
+            table.querySelectorAll('th').forEach(th => {
+                headers.push(`"${th.textContent}"`);
+            });
+            csv.push(headers.join(','));
+            
+            // 数据行
+            const rows = table.querySelectorAll('tbody tr');
+            if (rows.length === 0 || rows[0].querySelector('.empty-state')) {
+                alert('没有数据可导出');
+                return;
+            }
+            
+            rows.forEach(tr => {
+                const row = [];
+                tr.querySelectorAll('td').forEach(td => {
+                    // 跳过空状态行
+                    if (!td.querySelector('.empty-state') && !td.querySelector('.loading')) {
+                        row.push(`"${td.textContent}"`);
+                    }
+                });
+                if (row.length > 0) {
+                    csv.push(row.join(','));
+                }
+            });
+            
+            // 创建下载链接
+            const blob = new Blob(['\uFEFF' + csv.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `访客记录_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // 显示错误
+        function showError(message) {
+            const tbody = document.getElementById('recordsBody');
+            tbody.innerHTML = '<tr><td colspan="10" class="empty-state"><div>❌ ' + message + '</div></td></tr>';
+        }
+        
+        // 工具函数：格式化日期时间
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        // 工具函数：转义HTML
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>外来人员访问信息登记系统</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container { 
+            max-width: 100%;
+            width: 100%;
+            max-width: 500px;
+            background: white; 
+            padding: 25px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 25px; 
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .header h1 { 
+            color: #333; 
+            margin-bottom: 8px;
+            font-size: 22px;
+        }
+        .location-info { 
+            color: #666; 
+            font-size: 16px;
+            background: #f8f9fa;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        .form-group { 
+            margin-bottom: 18px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-weight: 600; 
+            color: #555;
+            font-size: 14px;
+        }
+        .required::after { 
+            content: " *"; 
+            color: #e74c3c; 
+        }
+        input, select { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 2px solid #e1e5e9; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            transition: all 0.3s;
+        }
+        input:focus, select:focus { 
+            border-color: #3498db; 
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 17px; 
+            font-weight: 600;
+            cursor: pointer; 
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        button:hover { 
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+        button:disabled { 
+            background: #bdc3c7; 
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .message { 
+            margin-top: 20px; 
+            padding: 15px; 
+            border-radius: 8px; 
+            text-align: center; 
+            display: none;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb; 
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb; 
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 13px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+                margin: 10px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+        .other-purpose-container{
+            margin-top: 10px;
+            display: none;
+        }
+        .other-purpose-input{
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .other-purpose-input:focus{
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .purpose-required::after{
+            content: " *";
+            color: #e74c3c;
+        }
+        /* 只读输入框样式 */
+        input[readonly] {
+            background-color: #f5f5f5 !important;
+            color: #666 !important;
+            cursor: not-allowed;
+            border-color: #d1d5db !important;
+        }
+        /* 弹窗样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .contact-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .contact-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .contact-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .contact-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .contact-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .modal-close-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .modal-close-btn:hover {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>外来人员访问信息登记系统</h1>
+            <div class="location-info" id="locationDisplay">地点加载中...</div>
+        </div>
+        
+        <form id="visitorForm">
+            <div class="form-group">
+                <label for="company" class="required">工作单位</label>
+                <input type="text" id="company" name="company" required maxlength="50" placeholder="请输入工作单位名称">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name" class="required">姓名</label>
+                    <input type="text" id="name" name="name" required maxlength="20" placeholder="请输入姓名">
+                </div>
+                
+                <div class="form-group">
+                    <label for="idCard" class="required">身份证号</label>
+                    <input type="text" id="idCard" name="idCard" required maxlength="18" placeholder="请输入身份证号">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="visitorCount" class="required">到访人数</label>
+                    <input type="number" id="visitorCount" name="visitorCount" required min="1" max="50" value="1" placeholder="人数">
+                </div>
+                
+                <div class="form-group">
+                    <label for="visitTime" class="required">来访时间</label>
+                    <input type="datetime-local" id="visitTime" name="visitTime" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="visitPurpose" class="required purpose-required">来访目的</label>
+                <select id="visitPurpose" name="visitPurpose" required>
+                    <option value="" disabled selected>请选择来访目的</option>
+                    <option value="设备维修">设备维修</option>
+                    <option value="安全检查">安全检查</option>
+                    <option value="项目建设">项目建设</option>
+                    <option value="参观学习">参观学习</option>
+                    <option value="技术指导">技术指导</option>
+                    <option value="其他">其他</option>
+                </select>
+
+                <!-- 其他目的输入框-->
+                <div class="other-purpose-container" id="otherPurposeContainer">
+                    <input type="text"
+                    id="otherPurpose"
+                    name="otherPurpose"
+                    class="other-purpose-input"
+                    placeholder="请具体说明来访目的"
+                    maxlength="50">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone" class="required">联系方式</label>
+                    <input type="tel" id="phone" name="phone" required pattern="1[3-9]\d{9}" 
+                           placeholder="请输入手机号" maxlength="11">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contactPerson" class="required">对接人员</label>
+                    <input type="text" id="contactPerson" name="contactPerson" required maxlength="20" placeholder="请输入对接人姓名">
+                </div>
+            </div>
+            
+            <input type="hidden" id="location" name="location">
+            <input type="hidden" id="locationName" name="locationName">
+            
+            <button type="submit" id="submitBtn">
+                <span id="submitText">提交信息</span>
+            </button>
+        </form>
+        
+        <div id="message" class="message"></div>
+        
+        <div class="footer">
+            <p>您的信息将安全存储，仅用于访客登记管理</p>
+        </div>
+
+        <!-- 成功弹窗 -->
+         <div id="successModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-icon">✅</div>
+                <div class="modal-title">信息提交成功！</div>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <span class="contact-label">对接人员：</span>
+                        <span class="contact-value" id="modalContactPerson">--</span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="contact-label">联系电话：</span>
+                        <span class="contact-value" id="modalContactPhone">--</span>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeSuccessModal()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入 LeanCloud SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.13.2/dist/av-min.js"></script>
+    <script src="locations.js"></script>
+    <script src="leancloud-config.js"></script>
+    
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化 LeanCloud
+            const initSuccess = initLeanCloud();
+            if (!initSuccess) {
+                showMessage('系统初始化失败，请刷新页面重试', 'error');
+                return;
+            }
+            
+            // 设置地点信息
+            setupLocation();
+            
+            // 设置表单验证和默认值
+            setupForm();
+
+            // 设置来访目的事件监听
+            setupVisitPurpose();
+        });
+
+        // 设置地点信息
+        function setupLocation() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const locationId = urlParams.get('location');
+            
+            if (!locationId) {
+                console.error('未找到location参数');
+                document.getElementById('locationDisplay').textContent = '参数错误：未找到地点信息';
+                document.getElementById('locationDisplay').style.color = 'red';
+                return;
+            }
+            
+            const location = getLocationById(locationId);
+            
+            if (location.id === 'unknown') {
+                console.error('未知地点ID:', locationId);
+                document.getElementById('locationDisplay').textContent = '参数错误：未知地点';
+                document.getElementById('locationDisplay').style.color = 'red';
+                return;
+            }
+            
+            // 设置地点信息
+            document.getElementById('location').value = location.id;
+            document.getElementById('locationName').value = location.name;
+            document.getElementById('locationDisplay').textContent = location.name;
+
+            // 设置对接人员信息（自动填写且不可更改）
+            document.getElementById('contactPerson').value = location.contactPerson || '管理员';
+            document.getElementById('contactPerson').readOnly = true;
+
+            // 存储对接人员电话用于弹窗显示
+            document.getElementById('contactPerson').setAttribute('data-contact-phone', location.contactPhone || '00000000000');
+            
+            if (location.description) {
+                document.getElementById('locationDisplay').title = location.description;
+            }
+            
+            console.log('成功设置地点:', location.name);
+            console.log('对接人员:', location.contactPerson, '联系电话:', location.contactPhone);
+        }
+
+        // 设置表单验证和默认值
+        function setupForm() {
+            // 设置默认来访时间为当前时间
+            const now = new Date();
+
+            // 修正时区问题，获取本地时间字符串
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            // 格式化时间为 datetime-local 需要的格式
+            const formattedNow = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById('visitTime').value = formattedNow;
+            
+            // 手机号输入验证
+            document.getElementById('phone').addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^\d]/g, '');
+            });
+            
+            // 身份证号输入验证
+            document.getElementById('idCard').addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9Xx]/g, '');
+            });
+            
+            // 到访人数验证
+            document.getElementById('visitorCount').addEventListener('change', function(e) {
+                if (this.value < 1) this.value = 1;
+                if (this.value > 50) this.value = 50;
+            });
+
+            // 确保对接人员字段保持只读
+            document.getElementById('contactPerson').readOnly = true;
+        }
+
+        // 显示消息
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // 显示成功弹窗
+        function showSuccessModal(contactPerson, contactPhone){
+            document.getElementById('modalContactPerson').textContent = contactPerson;
+            document.getElementById('modalContactPhone').textContent = contactPhone;
+            document.getElementById('successModal').style.display = 'block';
+        }
+
+        // 关闭成功弹窗
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+        }
+
+        // 表单提交处理
+        document.getElementById('visitorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const messageDiv = document.getElementById('message');
+            
+            // 禁用提交按钮，防止重复提交
+            submitBtn.disabled = true;
+            submitText.textContent = '提交中...';
+            messageDiv.style.display = 'none';
+            
+            try {
+                // 获取表单数据
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData);
+                
+                // 验证必填字段
+                const requiredFields = [
+                    { field: 'company', name: '工作单位' },
+                    { field: 'name', name: '姓名' },
+                    { field: 'idCard', name: '身份证号' },
+                    { field: 'visitorCount', name: '到访人数' },
+                    { field: 'visitTime', name: '来访时间' },
+                    { field: 'visitPurpose', name: '来访目的' },
+                    { field: 'phone', name: '联系方式' },
+                    { field: 'contactPerson', name: '对接人员' }
+                ];
+                
+                for (const { field, name } of requiredFields) {
+                    if (!data[field] || !data[field].toString().trim()) {
+                        throw new Error(`请填写${name}`);
+                    }
+                }
+                
+                // 验证手机号格式
+                if (!/^1[3-9]\d{9}$/.test(data.phone)) {
+                    throw new Error('请输入正确的手机号码');
+                }
+                
+                // 验证身份证号格式（简单验证）
+                if (!/^\d{17}[\dXx]$/.test(data.idCard)) {
+                    throw new Error('请输入正确的身份证号码');
+                }
+                
+                // 获取客户端IP
+                let ipAddress = '';
+                try {
+                    const ipResponse = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipResponse.json();
+                    ipAddress = ipData.ip;
+                } catch (ipError) {
+                    console.warn('无法获取IP地址:', ipError);
+                }
+                
+                data.ipAddress = ipAddress;
+
+                // 处理来访目的
+                if (data.visitPurpose === '其他' && data.otherPurpose){
+                    data.visitPurpose = data.otherPurpose; // 使用手动填写的目的
+                }
+
+                // 删除不需要的字段
+                delete data.otherPurpose;
+                
+                // 提交到 LeanCloud
+                const result = await submitVisitorInfo(data);
+
+                console.log('处理后的数据:', data);
+                
+                if (result.success) {
+                    // 获取对接人员信息
+                    const contactPerson = document.getElementById('contactPerson').value;
+                    const contactPhone = document.getElementById('contactPerson').getAttribute('data-contact-phone');
+
+                    // 显示成功弹窗
+                    showSuccessModal(contactPerson, contactPhone);
+                    // 清空表单，但保留地点信息和默认时间
+                    this.reset();
+                    setupForm(); // 重新设置默认值
+
+                    // 重新设置对接人员信息（因为reset会清空）
+                    const locationId = document.getElementById('location').value;
+                    const location = getLocationById(locationId);
+                    document.getElementById('contactPerson').value = location.contactPerson;
+                    document.getElementById('contactPerson').setAttribute('data-contact-phone', location.contactPhone);
+                    document.getElementById('contactPerson').readOnly = true;
+                } else {
+                    throw new Error(result.message);
+                }
+                
+            } catch (error) {
+                console.error('提交错误:', error);
+                showMessage('❌ ' + error.message, 'error');
+            } finally {
+                // 恢复按钮状态
+                submitBtn.disabled = false;
+                submitText.textContent = '提交信息';
+            }
+        });
+
+        // 设置来访目的的动态行为
+        function setupVisitPurpose(){
+            const purposeSelect = document.getElementById('visitPurpose');
+            const otherPurposeContainer = document.getElementById('otherPurposeContainer');
+            const otherPurposeInput = document.getElementById('otherPurpose');
+
+            // 监听下拉选择变化
+            purposeSelect.addEventListener('change', function(){
+                if (this.value === '其他'){
+                    // 显示其他目的输入框
+                    otherPurposeContainer.style.display = 'block';
+                    otherPurposeInput.required = true;
+                } else {
+                    // 隐藏其他目的输入框
+                    otherPurposeContainer.style.display = 'none';
+                    otherPurposeInput.required = false;
+                    otherPurposeInput.value = ''; //清空输入
+                }
+            });
+
+            // 表单提交前验证
+            document.getElementById('visitorForm').addEventListener('submit', function(e){
+                const selectedPurpose = purposeSelect.value;
+                const otherPurposeValue = otherPurposeInput.value.trim();
+
+                // 如果选择了"其他"但没有填写具体目的
+                if (selectedPurpose === '其他' && !otherPurposeValue){
+                    e.preventDefault();
+                    showMessage('请填写具体来访目的', 'error');
+                    otherPurposeInput.focus();
+                    return;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
